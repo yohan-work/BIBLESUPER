@@ -3,8 +3,8 @@ import { User, Comment } from '../types/bible';
 
 // Supabase URL과 API 키는 환경 변수나 설정 파일에서 가져옵니다.
 // 실제 프로젝트에서는 이 값들을 .env 파일에 저장하세요.
-const supabaseUrl = process.env.REACT_APP_SUPABASE_URL || 'https://vmefyedjzirsnxgtspdb.supabase.co';
-const supabaseKey = process.env.REACT_APP_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZtZWZ5ZWRqemlyc254Z3RzcGRiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUzOTU0NDksImV4cCI6MjA2MDk3MTQ0OX0.e8OmyyM0DHEvSnvYvLQw2EzCRh6kvWUw8DfLv_vGi1k';
+const supabaseUrl = process.env.REACT_APP_SUPABASE_URL || '';
+const supabaseKey = process.env.REACT_APP_SUPABASE_ANON_KEY || '';
 
 // Supabase 클라이언트 생성
 export const supabase = createClient(supabaseUrl, supabaseKey);
