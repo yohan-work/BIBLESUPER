@@ -20,7 +20,9 @@ const HomePage: React.FC = () => {
     loading, 
     error, 
     selectBook, 
-    selectChapter 
+    selectChapter,
+    toggleHighlight,
+    addComment
   } = useBible();
   
   const handleSelectBook = (bookId: string) => {
@@ -62,6 +64,8 @@ const HomePage: React.FC = () => {
         <VerseList 
           chapter={selectedChapter}
           onBack={handleBackFromVerses}
+          onToggleHighlight={toggleHighlight}
+          onAddComment={addComment}
         />
       )}
     </div>

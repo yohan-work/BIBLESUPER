@@ -79,6 +79,161 @@ const useBible = () => {
   const [selectedChapter, setSelectedChapter] = useState<Chapter | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [highlights, setHighlights] = useState<Record<string, boolean>>({});
+  const [comments, setComments] = useState<Record<string, string>>({});
+  
+  // 로컬 스토리지에서 하이라이트 및 코멘트 데이터 로드
+  useEffect(() => {
+    try {
+      const savedHighlights = localStorage.getItem('bible_highlights');
+      const savedComments = localStorage.getItem('bible_comments');
+      
+      if (savedHighlights) {
+        setHighlights(JSON.parse(savedHighlights));
+      }
+      
+      if (savedComments) {
+        setComments(JSON.parse(savedComments));
+      }
+    } catch (err) {
+      console.error("저장된 데이터 로드 중 오류:", err);
+    }
+  }, []);
+  
+  // 하이라이트 및 코멘트 데이터 저장
+  const saveUserData = () => {
+    try {
+      localStorage.setItem('bible_highlights', JSON.stringify(highlights));
+      localStorage.setItem('bible_comments', JSON.stringify(comments));
+    } catch (err) {
+      console.error("데이터 저장 중 오류:", err);
+    }
+  };
+  
+  // 구절 하이라이트 토글
+  const toggleHighlight = (verse: Verse) => {
+    const verseKey = `${verse.book}-${verse.chapter}-${verse.verse}`;
+    const newHighlights = { ...highlights };
+    
+    if (newHighlights[verseKey]) {
+      delete newHighlights[verseKey];
+    } else {
+      newHighlights[verseKey] = true;
+    }
+    
+    setHighlights(newHighlights);
+    saveUserData();
+    
+    // 선택된 장이 있으면 하이라이트 상태 업데이트
+    if (selectedChapter) {
+      const updatedVerses = selectedChapter.verses.map(v => {
+        const vKey = `${v.book}-${v.chapter}-${v.verse}`;
+        return {
+          ...v,
+          isHighlighted: vKey === verseKey ? !v.isHighlighted : newHighlights[vKey] || false
+        };
+      });
+      
+      setSelectedChapter({
+        ...selectedChapter,
+        verses: updatedVerses
+      });
+    }
+  };
+  
+  // 구절에 코멘트 추가
+  const addComment = (verse: Verse, comment: string) => {
+    const verseKey = `${verse.book}-${verse.chapter}-${verse.verse}`;
+    const newComments = { ...comments };
+    
+    if (comment.trim() === '') {
+      delete newComments[verseKey];
+    } else {
+      newComments[verseKey] = comment;
+    }
+    
+    setComments(newComments);
+    saveUserData();
+    
+    // 선택된 장이 있으면 코멘트 상태 업데이트
+    if (selectedChapter) {
+      const updatedVerses = selectedChapter.verses.map(v => {
+        const vKey = `${v.book}-${v.chapter}-${v.verse}`;
+        return {
+          ...v,
+          comment: vKey === verseKey ? comment : newComments[vKey] || ''
+        };
+      });
+      
+      setSelectedChapter({
+        ...selectedChapter,
+        verses: updatedVerses
+      });
+    }
+  };
+  
+  // 현재 선택된 장의 하이라이트 상태 업데이트
+  const updateChapterHighlights = () => {
+    if (!selectedChapter) return;
+    
+    const updatedVerses = selectedChapter.verses.map(verse => {
+      const verseKey = `${verse.book}-${verse.chapter}-${verse.verse}`;
+      return {
+        ...verse,
+        isHighlighted: highlights[verseKey] || false
+      };
+    });
+    
+    setSelectedChapter({
+      ...selectedChapter,
+      verses: updatedVerses
+    });
+  };
+  
+  // 현재 선택된 장의 코멘트 상태 업데이트
+  const updateChapterComments = () => {
+    if (!selectedChapter) return;
+    
+    const updatedVerses = selectedChapter.verses.map(verse => {
+      const verseKey = `${verse.book}-${verse.chapter}-${verse.verse}`;
+      return {
+        ...verse,
+        comment: comments[verseKey] || ''
+      };
+    });
+    
+    setSelectedChapter({
+      ...selectedChapter,
+      verses: updatedVerses
+    });
+  };
+  
+  // 장 선택 시 하이라이트 및 코멘트 데이터 적용
+  const applyUserDataToChapter = (chapter: Chapter): Chapter => {
+    console.log('하이라이트 데이터 적용 중...', chapter.book, chapter.chapter);
+    console.log('현재 저장된 하이라이트 수:', Object.keys(highlights).length);
+    
+    const updatedVerses = chapter.verses.map(verse => {
+      const verseKey = `${verse.book}-${verse.chapter}-${verse.verse}`;
+      const isHighlighted = highlights[verseKey] || false;
+      const comment = comments[verseKey] || '';
+      
+      if (isHighlighted) {
+        console.log(`하이라이트 적용: ${verseKey}`);
+      }
+      
+      return {
+        ...verse,
+        isHighlighted,
+        comment
+      };
+    });
+    
+    return {
+      ...chapter,
+      verses: updatedVerses
+    };
+  };
   
   // 파일 내용 로드 함수
   const loadFileContent = async (filename: string) => {
@@ -242,7 +397,8 @@ const useBible = () => {
             verses: dummyVerses
           };
           
-          setSelectedChapter(dummyChapter);
+          // 하이라이트 및 코멘트 적용하여 설정
+          setSelectedChapter(applyUserDataToChapter(dummyChapter));
           return;
         } catch (err) {
           console.error(`가상 데이터 생성 중 오류:`, err);
@@ -261,27 +417,16 @@ const useBible = () => {
             verses: dummyVerses
           };
           
-          setSelectedChapter(dummyChapter);
+          setSelectedChapter(applyUserDataToChapter(dummyChapter));
           return;
         }
       }
       
-      // 해당 장을 찾았을 때 - 실제 데이터 사용
-      const verifiedChapter: Chapter = {
-        book: chapter.book,
-        chapter: chapter.chapter,
-        verses: chapter.verses.map(verse => ({
-          ...verse,
-          // 내용이 없는 경우 기본 텍스트 제공
-          content: verse.content.trim() || `${bookId} ${chapterNum}:${verse.verse}`
-        }))
-      };
-      
-      setSelectedChapter(verifiedChapter);
-      console.log(`${bookId} ${chapterNum}장 로드 성공:`, verifiedChapter.verses.length, '절');
+      // 하이라이트 및 코멘트 적용하여 설정
+      setSelectedChapter(applyUserDataToChapter(chapter));
     } catch (err) {
-      setError('장 데이터를 불러오는 중 오류가 발생했습니다.');
-      console.error(err);
+      console.error(`${bookId} ${chapterNum}장 로드 중 오류:`, err);
+      setError(`${bookId} ${chapterNum}장을 불러오는 중 오류가 발생했습니다.`);
     } finally {
       setLoading(false);
     }
@@ -473,7 +618,9 @@ const useBible = () => {
     selectChapter,
     searchBooks,
     loadBookText,
-    generateVirtualBookData
+    generateVirtualBookData,
+    toggleHighlight,
+    addComment
   };
 };
 

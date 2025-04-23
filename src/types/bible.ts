@@ -3,6 +3,8 @@ export interface Verse {
   chapter: number;  // 장 번호
   verse: number;    // 절 번호
   content: string;  // 절 내용
+  isHighlighted?: boolean; // 하이라이트 여부
+  comment?: string; // 사용자 코멘트
 }
 
 export interface Chapter {
