@@ -1,10 +1,28 @@
+export interface User {
+  id: string;       // 사용자 고유 ID (Supabase UUID)
+  email: string;    // 사용자 이메일
+  name: string;     // 사용자 이름
+  profileImage?: string; // 프로필 이미지 URL
+  created_at?: string; // 계정 생성 시간
+}
+
+export interface Comment {
+  id: string;       // 댓글 고유 ID
+  userId: string;   // 작성자 ID
+  verseKey: string; // 구절 키 (book-chapter-verse 형식)
+  content: string;  // 댓글 내용
+  timestamp: number; // 작성 시간
+  likes: string[];  // 좋아요를 누른 사용자 ID 목록
+}
+
 export interface Verse {
   book: string;     // 책 이름 (예: '창세기')
   chapter: number;  // 장 번호
   verse: number;    // 절 번호
   content: string;  // 절 내용
   isHighlighted?: boolean; // 하이라이트 여부
-  comment?: string; // 사용자 코멘트
+  comment?: string; // 사용자 개인 코멘트
+  commentCount?: number; // 해당 구절의 댓글 수
 }
 
 export interface Chapter {

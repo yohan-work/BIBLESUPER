@@ -1,7 +1,6 @@
 .verse-list-container {
   display: flex;
   flex-direction: column;
-  padding: 0 16px 16px 16px;
   flex: 1;
   overflow: auto;
   position: relative;
@@ -212,4 +211,76 @@
   background-color: var(--primary-color);
   border: 1px solid var(--primary-color);
   color: white;
+}
+
+/* 구절 표시기 */
+.verse-indicators {
+  display: inline-flex;
+  gap: 6px;
+  margin-left: 8px;
+}
+
+.comment-indicator {
+  display: inline-block;
+  color: var(--primary-color);
+  font-size: 0.9em;
+}
+
+.public-comment-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 0.9em;
+  color: #2563eb;
+  background-color: #eff6ff;
+  padding: 1px 5px;
+  border-radius: 10px;
+}
+
+/* 모달 헤더 */
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--text-secondary);
+}
+
+.close-button:hover {
+  color: var(--text-color);
+}
+
+/* 탭 스타일 */
+.tabs {
+  display: flex;
+  margin: 20px 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.tab-button {
+  padding: 10px 16px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.tab-button:hover {
+  color: var(--primary-color);
+}
+
+.tab-button.active {
+  color: var(--primary-color);
+  border-bottom-color: var(--primary-color);
 } 
