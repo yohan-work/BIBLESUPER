@@ -1,10 +1,14 @@
 import { createClient } from '@supabase/supabase-js';
 import { User, Comment } from '../types/bible';
 
-// Supabase URL과 API 키는 환경 변수나 설정 파일에서 가져옵니다.
-// 실제 프로젝트에서는 이 값들을 .env 파일에 저장하세요.
-const supabaseUrl = process.env.REACT_APP_SUPABASE_URL || '';
-const supabaseKey = process.env.REACT_APP_SUPABASE_ANON_KEY || '';
+// Supabase URL과 API 키는 환경 변수에서 가져옵니다.
+const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
+const supabaseKey = process.env.REACT_APP_SUPABASE_ANON_KEY;
+
+// 환경 변수가 설정되어 있는지 확인
+if (!supabaseUrl || !supabaseKey) {
+  throw new Error('환경 변수가 설정되지 않았습니다. .env 파일에 REACT_APP_SUPABASE_URL과 REACT_APP_SUPABASE_ANON_KEY를 설정해주세요.');
+}
 
 // Supabase 클라이언트 생성
 export const supabase = createClient(supabaseUrl, supabaseKey);
