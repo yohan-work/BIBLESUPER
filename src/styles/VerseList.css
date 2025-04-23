@@ -1,0 +1,78 @@
+.verse-list-container {
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  flex: 1;
+  overflow: auto;
+}
+
+.verse-list-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16px;
+  position: sticky;
+  top: 0;
+  background-color: var(--card-color);
+  padding: 8px 0;
+  z-index: 10;
+}
+
+.back-button {
+  font-size: 16px;
+  color: var(--primary-color);
+  padding: 8px;
+  margin-right: 12px;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+}
+
+.back-button:hover {
+  background-color: rgba(49, 130, 246, 0.1);
+}
+
+.verse-list-header h2 {
+  font-size: 20px;
+  color: var(--text-color);
+  flex: 1;
+}
+
+.font-size-controls {
+  display: flex;
+  gap: 8px;
+}
+
+.font-size-controls button {
+  font-size: 14px;
+  padding: 6px 10px;
+  background-color: var(--background-color);
+  border-radius: 4px;
+  color: var(--text-secondary);
+  transition: all 0.2s;
+}
+
+.font-size-controls button:hover {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.verses-content {
+  padding: 8px 4px;
+  line-height: 1.7;
+}
+
+.verse-item {
+  margin-bottom: 12px;
+}
+
+.verse-number {
+  font-weight: 700;
+  color: var(--primary-color);
+  margin-right: 8px;
+  font-size: 0.9em;
+  vertical-align: top;
+}
+
+.verse-text {
+  display: inline;
+} 
