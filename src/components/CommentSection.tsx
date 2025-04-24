@@ -17,9 +17,10 @@ interface CommentWithUser extends Comment {
 
 interface CommentItemProps {
   comment: CommentWithUser;
-  currentUser: User | null;
+  currentUser?: User | null;
   onDelete: (commentId: string) => void;
   onLike: (commentId: string) => void;
+  onUpdate: (commentId: string, newContent: string) => void;
 }
 
 // 개별 댓글 컴포넌트
@@ -28,6 +29,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
   currentUser,
   onDelete,
   onLike,
+  onUpdate,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState(comment.content);
@@ -39,8 +41,8 @@ const CommentItem: React.FC<CommentItemProps> = ({
 
     const success = await commentUtils.updateComment(comment.id, editContent);
     if (success) {
+      onUpdate(comment.id, editContent);
       setIsEditing(false);
-      // UI 업데이트는 상위 컴포넌트에서 처리
     }
   };
 
@@ -258,6 +260,18 @@ const CommentSection: React.FC<CommentSectionProps> = ({
     }
   };
 
+  // 댓글 수정 핸들러 추가
+  const handleUpdateComment = (commentId: string, newContent: string) => {
+    setComments(
+      comments.map((comment) => {
+        if (comment.id === commentId) {
+          return { ...comment, content: newContent };
+        }
+        return comment;
+      })
+    );
+  };
+
   // 컴포넌트 마운트시 댓글 로드
   useEffect(() => {
     loadComments();
@@ -339,6 +353,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({
               currentUser={user}
               onDelete={handleDeleteComment}
               onLike={handleLikeComment}
+              onUpdate={handleUpdateComment}
             />
           ))
         ) : (
