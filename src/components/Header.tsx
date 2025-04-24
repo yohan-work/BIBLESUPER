@@ -1,31 +1,31 @@
-import React, { useState } from 'react';
-import { useAuth } from '../contexts/AuthContext';
-import AuthModal from './AuthModal';
-import '../styles/Header.css';
+import React, { useState } from "react";
+import { useAuth } from "../contexts/AuthContext";
+import AuthModal from "./AuthModal";
+import "../styles/Header.css";
 
 const Header: React.FC = () => {
   const { user, signOut, isLoading } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
-  
+
   const handleLogin = () => {
     setShowAuthModal(true);
   };
-  
+
   const handleLogout = async () => {
     await signOut();
     setShowUserMenu(false);
   };
-  
+
   const toggleUserMenu = () => {
     setShowUserMenu(!showUserMenu);
   };
-  
+
   return (
     <header className="app-header">
       <div className="header-content">
-        <h1 className="app-title">성경 함께 읽기</h1>
-        
+        <h1 className="app-title">혜인순123</h1>
+
         <div className="user-section">
           {isLoading ? (
             <div className="loading-indicator">로딩 중...</div>
@@ -33,10 +33,10 @@ const Header: React.FC = () => {
             <div className="user-profile">
               <button className="profile-button" onClick={toggleUserMenu}>
                 {user.profileImage ? (
-                  <img 
-                    src={user.profileImage} 
-                    alt={`${user.name} 프로필`} 
-                    className="profile-image" 
+                  <img
+                    src={user.profileImage}
+                    alt={`${user.name} 프로필`}
+                    className="profile-image"
                   />
                 ) : (
                   <div className="profile-initial">
@@ -45,7 +45,7 @@ const Header: React.FC = () => {
                 )}
                 <span className="user-name">{user.name}</span>
               </button>
-              
+
               {showUserMenu && (
                 <div className="user-menu">
                   <button className="menu-item" onClick={handleLogout}>
@@ -61,10 +61,13 @@ const Header: React.FC = () => {
           )}
         </div>
       </div>
-      
-      <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
+
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+      />
     </header>
   );
 };
 
-export default Header; 
+export default Header;

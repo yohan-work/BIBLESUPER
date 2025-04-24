@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import { User, Comment } from "../types/bible";
+import { User, Comment, DailyVerse, Verse } from "../types/bible";
 
 // Supabase URL과 API 키는 환경 변수에서 가져옵니다.
 const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
@@ -259,4 +259,182 @@ export const setupRealtimeComments = (
   return () => {
     supabase.removeChannel(channel);
   };
+};
+
+// 일일 말씀 관련 함수들
+export const dailyVerseUtils = {
+  // 오늘의 말씀 가져오기
+  getTodayVerse: async (): Promise<DailyVerse | null> => {
+    const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD 형식
+
+    try {
+      // 오늘 날짜에 해당하는 말씀 가져오기
+      const { data, error } = await supabase
+        .from("daily_verses")
+        .select("*")
+        .eq("date", today)
+        .single();
+
+      if (error) {
+        // 오늘 말씀이 없으면 가장 최근 말씀 가져오기
+        const { data: latestData, error: latestError } = await supabase
+          .from("daily_verses")
+          .select("*")
+          .order("date", { ascending: false })
+          .limit(1)
+          .single();
+
+        if (latestError) {
+          console.error("일일 말씀 로드 중 오류:", latestError);
+          return null;
+        }
+
+        // 최근 말씀의 구절 정보 가져오기
+        const verse = await getVerseByKey(latestData.verse_key);
+
+        return {
+          id: latestData.id,
+          date: latestData.date,
+          verseKey: latestData.verse_key,
+          verse: verse,
+          reflection: latestData.reflection,
+          theme: latestData.theme,
+        };
+      }
+
+      // 오늘 말씀의 구절 정보 가져오기
+      const verse = await getVerseByKey(data.verse_key);
+
+      return {
+        id: data.id,
+        date: data.date,
+        verseKey: data.verse_key,
+        verse: verse,
+        reflection: data.reflection,
+        theme: data.theme,
+      };
+    } catch (error) {
+      console.error("일일 말씀 로드 중 오류:", error);
+      return null;
+    }
+  },
+
+  // 특정 날짜의 말씀 가져오기
+  getVerseByDate: async (date: string): Promise<DailyVerse | null> => {
+    try {
+      const { data, error } = await supabase
+        .from("daily_verses")
+        .select("*")
+        .eq("date", date)
+        .single();
+
+      if (error) {
+        console.error(`${date} 날짜의 말씀 로드 중 오류:`, error);
+        return null;
+      }
+
+      // 구절 정보 가져오기
+      const verse = await getVerseByKey(data.verse_key);
+
+      return {
+        id: data.id,
+        date: data.date,
+        verseKey: data.verse_key,
+        verse: verse,
+        reflection: data.reflection,
+        theme: data.theme,
+      };
+    } catch (error) {
+      console.error(`${date} 날짜의 말씀 로드 중 오류:`, error);
+      return null;
+    }
+  },
+
+  // 말씀 목록 가져오기 (최근 순)
+  getRecentVerses: async (limit: number = 7): Promise<DailyVerse[]> => {
+    try {
+      const { data, error } = await supabase
+        .from("daily_verses")
+        .select("*")
+        .order("date", { ascending: false })
+        .limit(limit);
+
+      if (error) {
+        console.error("최근 말씀 목록 로드 중 오류:", error);
+        return [];
+      }
+
+      // 각 말씀의 구절 정보 가져오기
+      const dailyVerses = await Promise.all(
+        data.map(async (item) => {
+          const verse = await getVerseByKey(item.verse_key);
+          return {
+            id: item.id,
+            date: item.date,
+            verseKey: item.verse_key,
+            verse: verse,
+            reflection: item.reflection,
+            theme: item.theme,
+          };
+        })
+      );
+
+      return dailyVerses;
+    } catch (error) {
+      console.error("최근 말씀 목록 로드 중 오류:", error);
+      return [];
+    }
+  },
+};
+
+// 구절 키로 구절 정보 가져오기 (내부 도우미 함수)
+const getVerseByKey = async (verseKey: string): Promise<Verse> => {
+  try {
+    // verseKey 형식: 'book-chapter-verse' (예: '창세기-1-1')
+    const [book, chapterStr, verseStr] = verseKey.split("-");
+    const chapter = parseInt(chapterStr);
+    const verse = parseInt(verseStr);
+
+    // 로컬 데이터를 사용하는 대신 하드코딩된 성경 구절 데이터를 사용
+    const bibleTexts: Record<string, string> = {
+      "요한복음-3-16":
+        "하나님이 세상을 이처럼 사랑하사 독생자를 주셨으니 이는 그를 믿는 자마다 멸망하지 않고 영생을 얻게 하려 하심이라",
+      "시편-23-1": "여호와는 나의 목자시니 내게 부족함이 없으리로다",
+      "잠언-3-5":
+        "너는 마음을 다하여 여호와를 신뢰하고 네 명철을 의지하지 말라",
+      "빌립보서-4-13":
+        "내게 능력 주시는 자 안에서 내가 모든 것을 할 수 있느니라",
+      "마태복음-11-28":
+        "수고하고 무거운 짐 진 자들아 다 내게로 오라 내가 너희를 쉬게 하리라",
+      "이사야-41-10":
+        "두려워하지 말라 내가 너와 함께 함이라 놀라지 말라 나는 네 하나님이 됨이라 내가 너를 굳세게 하리라 참으로 너를 도와 주리라 참으로 나의 의로운 오른손으로 너를 붙들리라",
+      "로마서-8-28":
+        "우리가 알거니와 하나님을 사랑하는 자 곧 그의 뜻대로 부르심을 입은 자들에게는 모든 것이 합력하여 선을 이루느니라",
+    };
+
+    // 구절 키에 해당하는 성경 구절 텍스트 가져오기
+    const content = bibleTexts[verseKey];
+
+    if (!content) {
+      throw new Error(
+        `구절 키 ${verseKey}에 해당하는 성경 구절을 찾을 수 없습니다.`
+      );
+    }
+
+    return {
+      book,
+      chapter,
+      verse,
+      content,
+    };
+  } catch (error) {
+    console.error(`구절 정보 로드 중 오류 (${verseKey}):`, error);
+    // 오류 발생 시 기본값 반환
+    return {
+      book: "알 수 없음",
+      chapter: 0,
+      verse: 0,
+      content: "구절을 불러올 수 없습니다.",
+    };
+  }
 };

@@ -7,35 +7,72 @@
 
 .main-content {
   flex: 1;
-  display: flex;
-  padding: 16px;
+  padding: 1rem;
   max-width: 1200px;
   margin: 0 auto;
   width: 100%;
 }
 
-.loading {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
-  padding: 40px;
-  font-size: 18px;
-  color: var(--text-secondary);
+.loading,
+.error {
+  text-align: center;
+  padding: 2rem;
+  margin-top: 2rem;
+  font-size: 1.2rem;
 }
 
 .error {
-  background-color: #fee2e2;
-  color: #b91c1c;
-  padding: 16px;
-  border-radius: 6px;
-  margin: 20px 0;
-  font-size: 16px;
-  line-height: 1.5;
+  color: #c73e3e;
 }
 
+/* 홈페이지 액션 버튼 영역 */
+.homepage-actions {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+
+.show-daily-verse-btn {
+  padding: 0.8rem 1.5rem;
+  border: none;
+  border-radius: 6px;
+  background-color: #4a6da7;
+  color: white;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.show-daily-verse-btn:hover {
+  background-color: #3a5d97;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* 일일 말씀 페이지 */
+.daily-verse-page {
+  padding: 1rem 0;
+}
+
+.back-to-bible-btn {
+  margin-bottom: 1.5rem;
+  padding: 0.6rem 1.2rem;
+  border: none;
+  border-radius: 6px;
+  background-color: #f0f0f0;
+  color: #444;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.back-to-bible-btn:hover {
+  background-color: #e0e0e0;
+}
+
+/* 반응형 디자인 */
 @media (max-width: 768px) {
   .main-content {
-    padding: 12px;
+    padding: 0.5rem;
   }
 } 
