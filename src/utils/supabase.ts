@@ -1,5 +1,5 @@
-import { createClient } from '@supabase/supabase-js';
-import { User, Comment } from '../types/bible';
+import { createClient } from "@supabase/supabase-js";
+import { User, Comment } from "../types/bible";
 
 // Supabase URL과 API 키는 환경 변수에서 가져옵니다.
 const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
@@ -7,7 +7,9 @@ const supabaseKey = process.env.REACT_APP_SUPABASE_ANON_KEY;
 
 // 환경 변수가 설정되어 있는지 확인
 if (!supabaseUrl || !supabaseKey) {
-  throw new Error('환경 변수가 설정되지 않았습니다. .env 파일에 REACT_APP_SUPABASE_URL과 REACT_APP_SUPABASE_ANON_KEY를 설정해주세요.');
+  throw new Error(
+    "환경 변수가 설정되지 않았습니다. .env 파일에 REACT_APP_SUPABASE_URL과 REACT_APP_SUPABASE_ANON_KEY를 설정해주세요."
+  );
 }
 
 // Supabase 클라이언트 생성
@@ -17,7 +19,9 @@ export const supabase = createClient(supabaseUrl, supabaseKey);
 export const authUtils = {
   // 현재 로그인한 사용자 정보 가져오기
   getCurrentUser: async () => {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     return user;
   },
 
@@ -45,7 +49,7 @@ export const authUtils = {
 
     // 2. 사용자 프로필 생성
     if (data.user) {
-      await supabase.from('profiles').insert({
+      await supabase.from("profiles").insert({
         id: data.user.id,
         name,
         created_at: new Date(),
@@ -66,20 +70,15 @@ export const authUtils = {
 export const commentUtils = {
   // 특정 구절의 댓글 가져오기
   getCommentsByVerse: async (verseKey: string): Promise<Comment[]> => {
+    // profiles 테이블과의 join을 제거하고 comments 테이블만 쿼리
     const { data, error } = await supabase
-      .from('comments')
-      .select(`
-        *,
-        profiles:user_id (
-          name,
-          profile_image
-        )
-      `)
-      .eq('verse_key', verseKey)
-      .order('created_at', { ascending: false });
+      .from("comments")
+      .select("*")
+      .eq("verse_key", verseKey)
+      .order("created_at", { ascending: false });
 
     if (error) {
-      console.error('댓글 로드 중 오류:', error);
+      console.error("댓글 로드 중 오류:", error);
       return [];
     }
 
@@ -94,9 +93,13 @@ export const commentUtils = {
   },
 
   // 댓글 작성하기
-  addComment: async (userId: string, verseKey: string, content: string): Promise<Comment | null> => {
+  addComment: async (
+    userId: string,
+    verseKey: string,
+    content: string
+  ): Promise<Comment | null> => {
     const { data, error } = await supabase
-      .from('comments')
+      .from("comments")
       .insert({
         user_id: userId,
         verse_key: verseKey,
@@ -108,7 +111,7 @@ export const commentUtils = {
       .single();
 
     if (error) {
-      console.error('댓글 작성 중 오류:', error);
+      console.error("댓글 작성 중 오류:", error);
       return null;
     }
 
@@ -123,17 +126,20 @@ export const commentUtils = {
   },
 
   // 댓글 수정하기
-  updateComment: async (commentId: string, content: string): Promise<boolean> => {
+  updateComment: async (
+    commentId: string,
+    content: string
+  ): Promise<boolean> => {
     const { error } = await supabase
-      .from('comments')
+      .from("comments")
       .update({
         content,
         updated_at: new Date(),
       })
-      .eq('id', commentId);
+      .eq("id", commentId);
 
     if (error) {
-      console.error('댓글 수정 중 오류:', error);
+      console.error("댓글 수정 중 오류:", error);
       return false;
     }
 
@@ -143,12 +149,12 @@ export const commentUtils = {
   // 댓글 삭제하기
   deleteComment: async (commentId: string): Promise<boolean> => {
     const { error } = await supabase
-      .from('comments')
+      .from("comments")
       .delete()
-      .eq('id', commentId);
+      .eq("id", commentId);
 
     if (error) {
-      console.error('댓글 삭제 중 오류:', error);
+      console.error("댓글 삭제 중 오류:", error);
       return false;
     }
 
@@ -159,34 +165,34 @@ export const commentUtils = {
   toggleLike: async (commentId: string, userId: string): Promise<boolean> => {
     // 먼저 현재 댓글 정보 가져오기
     const { data, error } = await supabase
-      .from('comments')
-      .select('likes')
-      .eq('id', commentId)
+      .from("comments")
+      .select("likes")
+      .eq("id", commentId)
       .single();
 
     if (error) {
-      console.error('댓글 정보 로드 중 오류:', error);
+      console.error("댓글 정보 로드 중 오류:", error);
       return false;
     }
 
     // 좋아요 목록 업데이트
     const likes = data.likes || [];
     const hasLiked = likes.includes(userId);
-    
+
     const newLikes = hasLiked
       ? likes.filter((id: string) => id !== userId)
       : [...likes, userId];
 
     // 업데이트된 좋아요 목록 저장
     const { error: updateError } = await supabase
-      .from('comments')
+      .from("comments")
       .update({
         likes: newLikes,
       })
-      .eq('id', commentId);
+      .eq("id", commentId);
 
     if (updateError) {
-      console.error('좋아요 업데이트 중 오류:', updateError);
+      console.error("좋아요 업데이트 중 오류:", updateError);
       return false;
     }
 
@@ -194,21 +200,24 @@ export const commentUtils = {
   },
 
   // 구절별 댓글 수 가져오기
-  getCommentCounts: async (bookId: string, chapterNum: number): Promise<Record<string, number>> => {
+  getCommentCounts: async (
+    bookId: string,
+    chapterNum: number
+  ): Promise<Record<string, number>> => {
     const { data, error } = await supabase
-      .from('comments')
-      .select('verse_key, count')
-      .like('verse_key', `${bookId}-${chapterNum}-%`)
+      .from("comments")
+      .select("verse_key, count")
+      .like("verse_key", `${bookId}-${chapterNum}-%`)
       .select();
 
     if (error) {
-      console.error('댓글 수 로드 중 오류:', error);
+      console.error("댓글 수 로드 중 오류:", error);
       return {};
     }
 
     // 구절별로 댓글 수 집계
     const counts: Record<string, number> = {};
-    
+
     data.forEach((item) => {
       counts[item.verse_key] = (counts[item.verse_key] || 0) + 1;
     });
@@ -218,15 +227,18 @@ export const commentUtils = {
 };
 
 // 실시간 업데이트 설정
-export const setupRealtimeComments = (verseKey: string, callback: (comment: Comment) => void) => {
+export const setupRealtimeComments = (
+  verseKey: string,
+  callback: (comment: Comment) => void
+) => {
   const channel = supabase
     .channel(`comments:${verseKey}`)
     .on(
-      'postgres_changes',
+      "postgres_changes",
       {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'comments',
+        event: "INSERT",
+        schema: "public",
+        table: "comments",
         filter: `verse_key=eq.${verseKey}`,
       },
       (payload) => {
@@ -247,4 +259,4 @@ export const setupRealtimeComments = (verseKey: string, callback: (comment: Comm
   return () => {
     supabase.removeChannel(channel);
   };
-}; 
+};
