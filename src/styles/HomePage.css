@@ -29,7 +29,7 @@
 .homepage-actions {
   display: flex;
   justify-content: center;
-  margin-bottom: 2rem;
+  margin: 1rem 0;
 }
 
 .show-daily-verse-btn {
@@ -75,4 +75,4 @@
   .main-content {
     padding: 0.5rem;
   }
-} 
+}

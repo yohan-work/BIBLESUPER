@@ -123,12 +123,8 @@
   .app-title {
     font-size: 16px;
   }
-  
+
   .profile-button {
     padding: 4px 8px;
   }
-  
-  .user-name {
-    display: none;
-  }
-} 
+}
