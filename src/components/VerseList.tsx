@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Chapter, Verse, Book } from "../types/bible";
 import CommentSection from "./CommentSection";
 import { commentUtils } from "../utils/supabase";
@@ -11,6 +11,7 @@ interface VerseListProps {
   onAddComment: (verse: Verse, comment: string) => void;
   book?: Book; // 현재 선택된 책 정보 (선택사항)
   onNavigateChapter?: (bookId: string, chapterNum: number) => void; // 장 이동 함수
+  focusVerseNum?: number; // 포커스할 구절 번호 (옵션)
 }
 
 const VerseList: React.FC<VerseListProps> = ({
@@ -20,6 +21,7 @@ const VerseList: React.FC<VerseListProps> = ({
   onAddComment,
   book,
   onNavigateChapter,
+  focusVerseNum,
 }) => {
   const [fontSize, setFontSize] = useState(16); // 기본 폰트 크기
   const [selectedVerse, setSelectedVerse] = useState<Verse | null>(null);
@@ -30,12 +32,24 @@ const VerseList: React.FC<VerseListProps> = ({
   const [commentCounts, setCommentCounts] = useState<Record<string, number>>(
     {}
   );
+  const [focusedVerseKey, setFocusedVerseKey] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const verseRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   // 구절에 대한 고유 키 생성 함수
   const getVerseKey = (verse: Verse): string => {
     return `${verse.book}-${verse.chapter}-${verse.verse}`;
   };
+
+  // ref 설정 함수
+  const setVerseRef = useCallback(
+    (element: HTMLDivElement | null, verseKey: string) => {
+      if (verseRefs.current) {
+        verseRefs.current[verseKey] = element;
+      }
+    },
+    []
+  );
 
   // 댓글 수 로드
   useEffect(() => {
@@ -49,6 +63,40 @@ const VerseList: React.FC<VerseListProps> = ({
 
     loadCommentCounts();
   }, [chapter.book, chapter.chapter]);
+
+  // 자동 포커스 효과 (URL 파라미터나 RecentComments 클릭 시)
+  useEffect(() => {
+    if (focusVerseNum && verses.length > 0) {
+      // 포커스할 구절 찾기
+      const verseToFocus = verses.find(
+        (verse) => verse.verse === focusVerseNum
+      );
+
+      if (verseToFocus) {
+        const key = getVerseKey(verseToFocus);
+        setFocusedVerseKey(key);
+
+        // DOM이 렌더링 된 후 스크롤 포지션 설정
+        setTimeout(() => {
+          scrollToVerse(key);
+
+          // 5초 후 포커스 제거
+          setTimeout(() => {
+            setFocusedVerseKey(null);
+          }, 5000);
+        }, 300);
+      }
+    }
+  }, [verses, focusVerseNum]);
+
+  const scrollToVerse = (verseKey: string) => {
+    if (verseRefs.current[verseKey]) {
+      const verseElement = verseRefs.current[verseKey];
+      if (verseElement) {
+        verseElement.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }
+  };
 
   const increaseFontSize = () => {
     setFontSize((prev) => Math.min(prev + 2, 24)); // 최대 크기 제한
@@ -162,8 +210,10 @@ const VerseList: React.FC<VerseListProps> = ({
   // 새로운 chapter prop이 들어오면 verses 상태 업데이트 및 스크롤 최상단으로 이동
   useEffect(() => {
     setVerses(chapter.verses);
-    scrollToTop();
-  }, [chapter]);
+    if (!focusVerseNum) {
+      scrollToTop();
+    }
+  }, [chapter, focusVerseNum]);
 
   // 현재 장이 책의 마지막 장인지 확인
   const isLastChapter = book ? chapter.chapter >= book.chapters.length : false;
@@ -187,14 +237,17 @@ const VerseList: React.FC<VerseListProps> = ({
         {verses.map((verse) => {
           const verseKey = getVerseKey(verse);
           const commentCount = commentCounts[verseKey] || 0;
+          const isFocused = focusedVerseKey === verseKey;
 
           return (
             <div
               key={verseKey}
+              ref={(el) => setVerseRef(el, verseKey)}
               className={`verse-item ${
                 verse.isHighlighted ? "highlighted" : ""
-              }`}
+              } ${isFocused ? "verse-focused" : ""}`}
               onClick={() => handleVerseClick(verse)}
+              id={`verse-${verse.verse}`}
             >
               <span className="verse-number">{verse.verse}</span>
               <span className="verse-text">{verse.content}</span>

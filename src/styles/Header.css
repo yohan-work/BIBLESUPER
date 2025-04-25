@@ -21,6 +21,34 @@
   margin: 0;
 }
 
+/* New styles for header actions */
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.comments-button {
+  background: none;
+  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 18px;
+  transition: background-color 0.2s;
+  position: relative;
+}
+
+.comments-button:hover {
+  background-color: #f3f4f6;
+}
+
+/* End of new styles */
+
 .user-section {
   display: flex;
   align-items: center;
@@ -126,5 +154,13 @@
 
   .profile-button {
     padding: 4px 8px;
+  }
+
+  .user-name {
+    display: none;
+  }
+
+  .header-actions {
+    gap: 8px;
   }
 }

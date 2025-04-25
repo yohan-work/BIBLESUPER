@@ -5,7 +5,7 @@ import VerseList from "../components/VerseList";
 import Header from "../components/Header";
 import DailyVerse from "../components/DailyVerse";
 import useBible from "../hooks/useBible";
-import "../styles/HomePage.css"; // 스타일 파일은 나중에 만들 예정입니다
+import "../styles/HomePage.css";
 
 enum View {
   BOOKS,
@@ -16,6 +16,9 @@ enum View {
 
 const HomePage: React.FC = () => {
   const [currentView, setCurrentView] = useState<View>(View.BOOKS);
+  const [focusVerseNum, setFocusVerseNum] = useState<number | undefined>(
+    undefined
+  );
   const {
     books,
     selectedBook,
@@ -31,38 +34,71 @@ const HomePage: React.FC = () => {
   const handleSelectBook = (bookId: string) => {
     selectBook(bookId);
     setCurrentView(View.CHAPTERS);
+    setFocusVerseNum(undefined);
   };
 
   const handleSelectChapter = (bookId: string, chapterNum: number) => {
     selectChapter(bookId, chapterNum);
     setCurrentView(View.VERSES);
+    setFocusVerseNum(undefined);
   };
 
   const handleBackFromChapters = () => {
     setCurrentView(View.BOOKS);
+    setFocusVerseNum(undefined);
   };
 
   const handleBackFromVerses = () => {
     setCurrentView(View.CHAPTERS);
+    setFocusVerseNum(undefined);
   };
 
   const handleShowDailyVerse = () => {
     setCurrentView(View.DAILY_VERSE);
+    setFocusVerseNum(undefined);
   };
 
   const handleBackFromDailyVerse = () => {
     setCurrentView(View.BOOKS);
+    setFocusVerseNum(undefined);
   };
 
   // 장 탐색 기능 - 이전/다음 장으로 이동
   const handleNavigateChapter = (bookId: string, chapterNum: number) => {
     selectChapter(bookId, chapterNum);
+    setFocusVerseNum(undefined);
     // View는 그대로 VERSES를 유지하여 장 전환 시 목록으로 돌아가지 않음
+  };
+
+  // 구절 키를 통한 이동 기능 추가 (RecentComments에서 사용)
+  const handleNavigateToVerse = (verseKey: string) => {
+    const [bookId, chapterStr, verseStr] = verseKey.split("-");
+    const chapterNum = parseInt(chapterStr);
+    const verseNum = parseInt(verseStr);
+
+    // 구절 번호를 상태로 저장
+    setFocusVerseNum(verseNum);
+
+    // 선택된 책과 장이 이미 일치하는 경우 보기만 변경
+    if (
+      selectedBook?.id === bookId &&
+      selectedChapter?.chapter === chapterNum
+    ) {
+      setCurrentView(View.VERSES);
+      return;
+    }
+
+    // 책과 장이 다른 경우 순차적으로 선택 후 이동
+    selectBook(bookId);
+    setTimeout(() => {
+      selectChapter(bookId, chapterNum);
+      setCurrentView(View.VERSES);
+    }, 100);
   };
 
   return (
     <div className="home-container">
-      <Header />
+      <Header onNavigateToVerse={handleNavigateToVerse} />
       <main className="main-content">
         {loading && <div className="loading">로딩 중...</div>}
         {error && <div className="error">{error}</div>}
@@ -97,6 +133,7 @@ const HomePage: React.FC = () => {
             onToggleHighlight={toggleHighlight}
             onAddComment={addComment}
             onNavigateChapter={handleNavigateChapter}
+            focusVerseNum={focusVerseNum}
           />
         )}
 
