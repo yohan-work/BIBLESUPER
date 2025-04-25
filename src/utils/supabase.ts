@@ -438,3 +438,132 @@ const getVerseByKey = async (verseKey: string): Promise<Verse> => {
     };
   }
 };
+
+// 개인 묵상 관련 유틸리티 함수
+export const noteUtils = {
+  // 사용자의 모든 개인 묵상 불러오기
+  getUserNotes: async (userId: string): Promise<Record<string, string>> => {
+    if (!userId) return {};
+
+    const { data, error } = await supabase
+      .from("user_notes")
+      .select("verse_key, content")
+      .eq("user_id", userId);
+
+    if (error) {
+      console.error("개인 묵상 로드 중 오류:", error);
+      return {};
+    }
+
+    // verse_key를 키로, content를 값으로 하는 객체로 변환
+    const notes: Record<string, string> = {};
+    data.forEach((note) => {
+      notes[note.verse_key] = note.content;
+    });
+
+    return notes;
+  },
+
+  // 특정 구절의 개인 묵상 저장/수정
+  saveNote: async (
+    userId: string,
+    verseKey: string,
+    content: string
+  ): Promise<boolean> => {
+    if (!userId) return false;
+
+    try {
+      // 먼저 해당 사용자의 해당 구절 노트가 있는지 확인
+      const { data: existingNote, error: checkError } = await supabase
+        .from("user_notes")
+        .select("id")
+        .eq("user_id", userId)
+        .eq("verse_key", verseKey)
+        .maybeSingle();
+
+      if (checkError) {
+        console.error("노트 확인 중 오류:", checkError);
+        return false;
+      }
+
+      // 내용이 비어있으면 노트 삭제
+      if (!content.trim()) {
+        if (existingNote?.id) {
+          const { error: deleteError } = await supabase
+            .from("user_notes")
+            .delete()
+            .eq("id", existingNote.id);
+
+          if (deleteError) {
+            console.error("노트 삭제 중 오류:", deleteError);
+            return false;
+          }
+        }
+        return true;
+      }
+
+      // 기존 노트가 있으면 업데이트, 없으면 새로 생성
+      if (existingNote?.id) {
+        const { error: updateError } = await supabase
+          .from("user_notes")
+          .update({
+            content,
+            updated_at: new Date(),
+          })
+          .eq("id", existingNote.id);
+
+        if (updateError) {
+          console.error("노트 업데이트 중 오류:", updateError);
+          return false;
+        }
+      } else {
+        const { error: insertError } = await supabase
+          .from("user_notes")
+          .insert({
+            user_id: userId,
+            verse_key: verseKey,
+            content,
+            created_at: new Date(),
+          });
+
+        if (insertError) {
+          console.error("노트 저장 중 오류:", insertError);
+          return false;
+        }
+      }
+
+      return true;
+    } catch (error) {
+      console.error("노트 저장 중 예상치 못한 오류:", error);
+      return false;
+    }
+  },
+
+  // 특정 장의 모든 개인 묵상 불러오기
+  getChapterNotes: async (
+    userId: string,
+    bookId: string,
+    chapterNum: number
+  ): Promise<Record<string, string>> => {
+    if (!userId) return {};
+
+    const { data, error } = await supabase
+      .from("user_notes")
+      .select("verse_key, content")
+      .eq("user_id", userId)
+      .like("verse_key", `${bookId}-${chapterNum}-%`);
+
+    if (error) {
+      console.error("장 노트 로드 중 오류:", error);
+      return {};
+    }
+
+    // verse_key를 키로, content를 값으로 하는 객체로 변환
+    const notes: Record<string, string> = {};
+    data.forEach((note) => {
+      notes[note.verse_key] = note.content;
+    });
+
+    return notes;
+  },
+};

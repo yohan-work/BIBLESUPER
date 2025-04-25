@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Chapter, Verse, Book } from "../types/bible";
 import CommentSection from "./CommentSection";
 import { commentUtils } from "../utils/supabase";
+import { useAuth } from "../contexts/AuthContext";
 import "../styles/VerseList.css"; // 스타일 파일은 나중에 만들 예정입니다
 
 interface VerseListProps {
@@ -12,6 +13,7 @@ interface VerseListProps {
   book?: Book; // 현재 선택된 책 정보 (선택사항)
   onNavigateChapter?: (bookId: string, chapterNum: number) => void; // 장 이동 함수
   focusVerseNum?: number; // 포커스할 구절 번호 (옵션)
+  isSaving?: boolean; // 개인 묵상 저장 중 상태
 }
 
 const VerseList: React.FC<VerseListProps> = ({
@@ -22,7 +24,9 @@ const VerseList: React.FC<VerseListProps> = ({
   book,
   onNavigateChapter,
   focusVerseNum,
+  isSaving = false,
 }) => {
+  const { user } = useAuth();
   const [fontSize, setFontSize] = useState(16); // 기본 폰트 크기
   const [selectedVerse, setSelectedVerse] = useState<Verse | null>(null);
   const [verses, setVerses] = useState<Verse[]>(chapter.verses);
@@ -33,8 +37,18 @@ const VerseList: React.FC<VerseListProps> = ({
     {}
   );
   const [focusedVerseKey, setFocusedVerseKey] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const verseRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
+  // isSaving prop 변경 감지
+  useEffect(() => {
+    if (!isSaving && isSubmitting) {
+      setIsSubmitting(false);
+      // 저장 완료되면 모달 닫기
+      setShowCommentModal(false);
+    }
+  }, [isSaving, isSubmitting]);
 
   // 구절에 대한 고유 키 생성 함수
   const getVerseKey = (verse: Verse): string => {
@@ -137,11 +151,13 @@ const VerseList: React.FC<VerseListProps> = ({
     });
   };
 
-  const saveComment = () => {
+  const saveComment = async () => {
     if (!selectedVerse) return;
 
+    setIsSubmitting(true);
+
     // useBible의 addComment 함수 호출
-    onAddComment(selectedVerse, currentComment);
+    await onAddComment(selectedVerse, currentComment);
 
     // 현재 UI 업데이트를 위한 로컬 상태 업데이트
     const updatedVerses = verses.map((v) => {
@@ -159,10 +175,17 @@ const VerseList: React.FC<VerseListProps> = ({
       ...selectedVerse,
       comment: currentComment,
     });
-    setShowCommentModal(false);
+
+    // 로그인하지 않은 사용자인 경우 바로 모달 닫기
+    if (!user) {
+      setShowCommentModal(false);
+      setIsSubmitting(false);
+    }
+    // 로그인한 사용자는 저장 완료 후 모달 닫기 (isSaving prop 사용)
   };
 
   const closeModal = () => {
+    if (isSubmitting) return; // 저장 중에는 닫기 방지
     setShowCommentModal(false);
   };
 
@@ -349,11 +372,19 @@ const VerseList: React.FC<VerseListProps> = ({
                 </div>
 
                 <div className="modal-footer">
-                  <button className="cancel-button" onClick={closeModal}>
+                  <button
+                    className="cancel-button"
+                    onClick={closeModal}
+                    disabled={isSubmitting}
+                  >
                     취소
                   </button>
-                  <button className="save-button" onClick={saveComment}>
-                    저장
+                  <button
+                    className="save-button"
+                    onClick={saveComment}
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? "저장 중..." : "저장"}
                   </button>
                 </div>
               </>

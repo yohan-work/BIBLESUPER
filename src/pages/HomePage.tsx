@@ -25,6 +25,7 @@ const HomePage: React.FC = () => {
     selectedChapter,
     loading,
     error,
+    isSaving,
     selectBook,
     selectChapter,
     toggleHighlight,
@@ -134,6 +135,7 @@ const HomePage: React.FC = () => {
             onAddComment={addComment}
             onNavigateChapter={handleNavigateChapter}
             focusVerseNum={focusVerseNum}
+            isSaving={isSaving}
           />
         )}
 
